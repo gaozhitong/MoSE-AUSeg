@@ -55,16 +55,17 @@ def cal_metrics_batch(sample_arr, gt_arr, prob_sample = None, prob_gt = None, to
                       nlabels=1, label_range = None, ret_h_score = True):
 
     """
-    labels are in number encoding.
-    :param sample_arr: expected shape B x N x C x H x or B x N x H x W
-    :param gt_arr: B x M x C x H x W or B x M x H x W
-    :param prob_sample: expected shape B x N
-    :param prob_gt: expected shape B x M
-    :param to_one_hot: Set True if the gt_arr is not in one hot format.
+    :param sample_arr: torch.tensor, expected shape (B,N,C,H,W) or (B,N,H,W)
+    :param gt_arr:  torch.tensor, expected shape (B,M,C,H,W) or (B,M,H,W)
+    :param prob_sample: torch.tensor, expected shape (B,N)
+    :param prob_gt: torch.tensor, expected shape (B,M)
+    :param to_one_hot: Set to True if the input arr is not in one hot format.
     :param nlabels: Class number. This is used for one_hot encoding.
-    :param label_range: for LIDC use [1], for Cityscapes use the ten flipping class ids.
-    :param ret_h_score: whether to return Matched-IoU. If set False, this metric only return the GED score.
-    :return:
+                    For LIDC, nlabels = 2, for Cityscapes, nlabels = 19.
+    :param label_range: The evaluated class, for LIDC use [1], for Cityscapes use the ten flipping class ids.
+    :param ret_h_score: whether to return Matched-IoU. If set to False, this metric only return the GED score.
+
+    :return: A list containing both GED score and M-IoU score (if ret_h_score is set to True).
     """
 
     if nlabels > 2:
