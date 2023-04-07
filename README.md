@@ -1,5 +1,5 @@
 # Modeling Multimodal Aleatoric Uncertainty in Segmentation with Mixture of Stochastic Experts
-The official code repo for the paper "Modeling Multimodal Aleatoric Uncertainty in Segmentation with Mixture of Stochastic Experts". (ICLR 2023)
+Welcome to the GitHub repository for *Modeling Multimodal Aleatoric Uncertainty in Segmentation with Mixture of Stochastic Experts*. The complete code for this project will be released **before the end of April**. Please check back later for the code and instructions on how to use it. Thanks for your interest!
 
 ## Updates
 - 03/01/2023 Upload evluation metrics.
