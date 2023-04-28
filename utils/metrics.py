@@ -3,8 +3,6 @@ import torch.nn.functional as F
 import numpy as np
 import scipy
 import ot
-import os
-from matplotlib import pyplot as plt
 
 """
 Useful Functions 
@@ -149,6 +147,65 @@ def cal_metrics_batch(sample_arr, gt_arr, prob_sample = None, prob_gt = None, to
         return_list.append(avg_h_score)
 
     return return_list
+
+def calculate_ece(softmaxes, labels, n_bins=10, label_range = None):
+    """
+    Calculates the Expected Calibration Error (ECE) of a model.
+    We extend the original form to our case when multiple labels exits.
+
+    Arguments:
+    softmaxes -- a tensor of shape (N, C), where N is the total number of data and C is the number of classes,
+                 containing the softmax scores for each class.
+    labels -- a tensor of shape (N,) containing the ground-truth labels (marginalized probabilities).
+    n_bins -- the number of bins to use for computing the ECE (default: 10).
+    label_range -- the range of labels to consider (default: None, which means all labels in the multi-class case;)
+                    For LIDC use [1], for Cityscapes use the ten flipping class ids.
+
+    Returns:
+    ece -- a scalar tensor representing the ECE
+
+    See:
+    [1] Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q Weinberger. On calibration of modern neural networks. ICML, 2017.
+    [2] Meelis Kull et al. Beyond temperature scaling: Obtaining well-calibrated multi-class probabilities with
+        dirichlet calibration. NIPS, 2019.
+    """
+
+    bin_boundaries = torch.linspace(0, 1, n_bins + 1)
+    bin_lowers = bin_boundaries[:-1]
+    bin_uppers = bin_boundaries[1:]
+
+    confidences, predictions = torch.max(softmaxes, 1)
+
+    if label_range is not None:
+        # For the binary case in the LIDC dataset, we measure how the foreground class is calibrated.
+        if len(label_range) == 1:
+            confidences_masked = softmaxes[:,1]
+            accuracies = labels[1]
+
+        # For the multi-class case in the Cityscapes dataset, we measure how the most-likely class
+        # is calibrated (aka confidence calibration).
+        else:
+            confidences_masked = confidences * 0 - 1
+            for i in label_range:
+                confidences_masked[predictions == i] = confidences[predictions == i]
+            accuracies = (labels * F.one_hot(predictions, softmaxes.shape[1]).transpose(0, 1)).sum(0)
+    else:
+        confidences_masked = confidences
+        accuracies = (labels * F.one_hot(predictions, softmaxes.shape[1]).transpose(0, 1)).sum(0)
+
+    ece = torch.zeros(1, device=softmaxes.device)
+    for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+        # Calculated |confidence - accuracy| in each bin
+        in_bin = confidences_masked.gt(bin_lower.item()) * confidences_masked.le(bin_upper.item())
+        prop_in_bin = in_bin.float().mean()
+        if prop_in_bin.item() > 0:
+            # This is calculated according to the expectation form in ECE.
+            #(predictions[in_bin] == labels[in_bin]) * prob + (predictions[in_bin] == labels[in_bin]) * prob +
+            accuracy_in_bin = accuracies[in_bin].float().mean()
+            avg_confidence_in_bin = confidences_masked[in_bin].mean()
+            ece += torch.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
+
+    return ece.item()
 
 if __name__ == '__main__':
     # debug
