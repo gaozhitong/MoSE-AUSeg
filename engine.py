@@ -31,8 +31,6 @@ class Engine:
         self.net = torch.nn.DataParallel(self.net).cuda()
         self.load_model_optimizer_weight(exp_config, args)
 
-
-
         # Setup tensorboard
         if tensorboard:
             run_dir = os.path.join(exp_config.run_root, exp_config.log_dir_name, exp_config.experiment_name)
