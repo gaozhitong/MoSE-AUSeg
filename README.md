@@ -26,7 +26,7 @@ This operation will split the dataset into training, validation, and test sets, 
 
 ## Environment
 Our code requires CUDA 10.1 and some other dependencies. We provide an easy way to set up the environment using conda.
-```angular2html
+```python
 # Create a new conda environment named 'MoSE'
 conda env create -f env/environment.yaml
 
@@ -39,7 +39,7 @@ The code allows you to run different experiments by using different experiment c
 
 Here is an example of using the 'experiments/lidc_proposed.py' file to train the model with the proposed configuration for the LIDC dataset. Make sure to set the dataset path in the experiment configuration file. The default dataset path is '../data/lidc_npy' and '../data/cityscape_npy_5'.
 
-```angular2html
+```python
 # Example command for running the model with different experiment configuration files
 python main.py experiments/lidc_proposed.py
 ```
@@ -54,7 +54,7 @@ Feel free to experiment with different configurations and options to achieve the
 
 ## 3. Testing the Model
 After completing the training, you can assess the model's performance by executing the following command.
-```angular2html
+```python
 python main.py experiments/lidc_proposed.py --demo test
 ```
 This command will evaluate the model's performance by performing inference on the test dataset using the trained model associated 
@@ -110,7 +110,7 @@ For general discussions, suggestions, or further assistance, you can reach out t
 
 # Citation
 If you find our work helpful for your research, please consider citing our paper:
-```angular2html
+```bibtex
 @inproceedings{gao2023modeling,
     title={Modeling Multimodal Aleatoric Uncertainty in Segmentation with Mixture of Stochastic Experts},
     author={Zhitong Gao and Yucong Chen and Chuyu Zhang and Xuming He},
