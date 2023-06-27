@@ -4,7 +4,7 @@
 This is the official project repository for [*Modeling Multimodal Aleatoric Uncertainty in Segmentation with Mixture of Stochastic Experts*](https://arxiv.org/pdf/2212.07328.pdf) by Zhitong Gao, Yucong Chen, Chuyu Zhang, Xuming He (ICLR 2023).
 - **Other resources:** [OpenReview](https://openreview.net/forum?id=KE_wJD2RK4)  | [Poster](https://gaozhitong.github.io/posters/poster-iclr.pdf) | [Video](https://www.youtube.com/watch?v=SVyqWKnR_pQ)
 - **TL;DR:** We propose a novel mixture of stochastic experts (MoSE) model training with a Wasserstein-like loss, which produces an efficient two-level representation for the multi-modal aleatoric uncertainty in semantic segmentation.
-![avatar](imgs/intro.jpg)
+![avatar](imgs/overview.jpg)
 # 1. Preparation
 ## Dataset
 We evaluate our method on two public benchmarks, including [LIDC-IDRI dataset](https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI) and synthetic multimodal [Cityscapes dataset](https://www.cityscapes-dataset.com/).
