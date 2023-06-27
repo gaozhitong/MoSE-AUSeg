@@ -13,18 +13,16 @@ and a synthetic multimodal version of the [Cityscapes dataset](https://www.citys
 Follow the instructions below to access and preprocess the data.
 ### LIDC-IDRI Dataset
 1. Download the pre-processed 2D crops provided by [Probabilistic-Unet-Pytorch](https://github.com/stefanknegt/Probabilistic-Unet-Pytorch) in this [link](https://drive.google.com/drive/folders/1xKfKCQo8qa6SAr3u7qWNtQjIphIrvmd5?usp=sharing).
-2. Process and organize the data directory by running [data/preprocess/lidc_data_loader.py](data/preprocess/lidc_data_loader.py). You may need to change the path 'data_root' to the directory where
+2. Process and organize the data directory by running [data/preprocess/lidc_data_loader.py](data/preprocess/lidc_data_loader.py) script. You may need to change the path 'data_root' to the directory where
 you save the downloaded data.  Also, define the paths of the processed data. 
 This will generate an HDF5 data package as well as a NumPy directory. Note that in our experiments, only the NumPy data directory is used. You can delete the others if you prefer.
 
 ### Cityscapes Dataset
 1. Download the [images](https://www.cityscapes-dataset.com/file-handling/?packageID=3) and original [annotations](https://www.cityscapes-dataset.com/file-handling/?packageID=1) from the official Cityscapes dataset.
-2. Set data directories in [data/preprocess/preprocessing_config.py](data/preprocess/preprocessing_config.py) and run [data/preprocess/preprocessing.py](data/preprocess/preprocessing.py) to  rescale the data to a resolution of 256 x 512 and save as numpy arrays.
+2. Set the data directories in the [data/preprocess/preprocessing_config.py](data/preprocess/preprocessing_config.py) file and run [data/preprocess/preprocessing.py](data/preprocess/preprocessing.py) script to rescale the data to a resolution of 256 x 512 and save as numpy arrays.
 3. Download the black-box predictions provided [here](https://drive.google.com/file/d/1EkJD1PUe7J5f5oc_VvUj-7a7XTT-I-Gc/view) as in [CARSSS](https://drive.google.com/file/d/1EkJD1PUe7J5f5oc_VvUj-7a7XTT-I-Gc/view). 
-3. Finally, setup the dataset by running [data/preprocess/cityscapes_data_loader.py](data/preprocess/cityscapes_data_loader.py).
-This operation will split the training, validation and test set, construct multiple labels and corresponding probabilities. 
-You may need to change some data paths in the file to fit your situation.  This will generate a hdf5 data package as well as a numpy directory.
-In our experiments only the npy data directory is used. You can delete others if you like.
+4. Lastly, set up the dataset by running the [data/preprocess/cityscapes_data_loader.py](data/preprocess/cityscapes_data_loader.py) script.
+This operation will split the dataset into training, validation, and test sets, construct multiple labels, and their corresponding probabilities. You may need to modify some data paths in the file to fit your specific situation.
 
 ## Environment
 Our code requires CUDA 10.1 and some other dependencies. We provide an easy way to set up the environment using conda.
