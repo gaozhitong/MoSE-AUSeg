@@ -4,7 +4,7 @@ import torch.distributions as td
 import utils.metrics as metrics
 import math
 from models.backbone import Unet, Conv2DSequence, weights_init, mu_init
-import numpy as np
+
 
 class Gating(nn.Module):
     """
@@ -21,8 +21,10 @@ class Gating(nn.Module):
             nn.Linear(num_filter, self.num_expert,  bias=False)
         )
 
-    def forward(self, encoding):
+    def forward(self, feature_map):
         # Global average pooling
+        encoding = torch.mean(feature_map, dim=2, keepdim=True).squeeze(dim=2)
+        encoding = torch.mean(encoding, dim=2, keepdim=True).squeeze(dim=2)
         z = self.fc_layer(encoding) # B,D
         prob = torch.nn.functional.softmax(z, dim=-1).float()
         return prob
@@ -41,7 +43,7 @@ class Noise_injector(nn.Module):
 
         self.residual = nn.Linear(self.z_dim, self.n_hidden)
         self.scale = nn.Linear(self.z_dim, self.n_hidden)
-        self.last_layers = Conv2DSequence(self.n_hidden, self.n_channels_out, kernel=1, depth=3)
+        self.last_layer = nn.Conv2d(self.n_hidden, self.n_channels_out, kernel_size=1)
 
         self.residual.apply(weights_init)
         self.scale.apply(weights_init)
@@ -59,7 +61,7 @@ class Noise_injector(nn.Module):
 
         feature_map = (feature_map + residual) * (scale + 1e-5)
 
-        return self.last_layers(feature_map)
+        return self.last_layer(feature_map)
 
 class MoSE(nn.Module):
     """
@@ -75,8 +77,7 @@ class MoSE(nn.Module):
         num_expert = 4,
         sample_per_mode = 4,
         # Params for gating.
-        gating_feature_level=-1,
-        gating_input_layer = 5,
+        gating_feature_level=6,
         # Params for loss and metrics.
         softmax=True,
         loss_fn = None,
@@ -100,11 +101,11 @@ class MoSE(nn.Module):
                                requires_grad=True)
         self.log_sigma = nn.Parameter(torch.ones_like(self.mu) * math.log((1 / 8)), requires_grad=True)
 
-        self.backbone = Unet(input_channels, num_classes, num_filters, global_layer = gating_input_layer,
-                             apply_last_layer=False)
+        self.backbone = Unet(input_channels, num_classes, num_filters, apply_last_layer=False)
         self.gating = Gating(self.num_filters[gating_feature_level], self.num_expert)
-        self.fuse = Noise_injector(self.num_filters[0], self.latent_dim, self.num_classes)
-
+        self.fuse = Noise_injector(self.num_filters[0], self.latent_dim, self.num_filters[0]+self.latent_dim)
+        self.layers = Conv2DSequence(self.num_filters[0]+self.latent_dim, self.num_filters[0], self.num_filters[0], kernel=1, depth=3)
+        self.last_layer = nn.Conv2d(self.num_filters[0], num_classes, kernel_size=1)
         self.loss_fn = loss_fn
 
     def forward(self, input, label=None, prob_gt = None, val=False):
@@ -135,12 +136,13 @@ class MoSE(nn.Module):
             sample_probs = expert_probs.expand(S, B, K).permute(1, 2, 0).flatten(1) / S
 
         # Fuse the latent codes with the semantic features and get the final predictions.
-        pred = self.fuse(u_d, latent_codes).reshape(B, N, CL, H, W)
+        u_d_hat = self.fuse(u_d, latent_codes)
+        pred = self.last_layer(self.layers(u_d_hat)).reshape(B, N, CL, H, W)
 
         if self.softmax:
             pred = torch.softmax(pred, 2)
         if self.masked_pred: # For cityscapes only. We follow the convention to ignore void classes.
-            pred = self.masked_pred_func(pred, label)
+            pred = self.masked_pred_func(pred, label, N)
 
         if val: # For evaluation, calculate the metrics, otherwise, return the loss.
             metric = metrics.cal_metrics_batch((pred.argmax(2)).long(), (label).long(), sample_probs, prob_gt,
@@ -175,11 +177,11 @@ class MoSE(nn.Module):
 
         return latent_codes, prob
 
-    def masked_pred_func(self, pred, label):
+    def masked_pred_func(self, pred, label, N):
         """
         Follow the convention, we do not calculate loss on the void classes on Cityscapes.
         """
-        ignore_mask = torch.where(label[:, 0].unsqueeze(1).repeat(1, self.sample_per_mode, 1, 1) == 0)
+        ignore_mask = torch.where(label[:, 0].unsqueeze(1).repeat(1, N, 1, 1) == 0)
 
         w = torch.ones_like(pred)
         r = torch.zeros_like(pred)
@@ -188,3 +190,4 @@ class MoSE(nn.Module):
 
         pred = pred * w + r
         return pred
+

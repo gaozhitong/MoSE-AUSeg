@@ -4,7 +4,7 @@ import data.transformations as transformations
 import torchvision.transforms as transforms
 from models.MoSE import MoSE
 
-experiment_name = 'MoSE_1annot_run'
+experiment_name = 'lidc_pretrained_1annot'
 
 # Setup directories
 log_root = './log'
@@ -39,7 +39,6 @@ loss_fn = OT_loss( cost_fn='iou', beta = 10, gamma0=1/2)
 net = MoSE(input_channels=input_channels,
                 num_classes=n_classes,
                 num_filters=[32, 64, 128, 192, 192, 192, 192],
-                gating_input_layer = 4,
                 latent_dim = 1,
                 num_expert = 4,
                 sample_per_mode=4,

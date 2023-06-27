@@ -22,9 +22,13 @@ def setup_logger(name, log_file, level=logging.INFO):
     handler = logging.FileHandler(log_file, mode='w')
     handler.setFormatter(formatter)
 
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.addHandler(handler)
+    logger.addHandler(console_handler)
 
     return logger
 
@@ -133,8 +137,8 @@ def get_conf_map_accumulate(prediction, prob, masks_arrangement, prob_gt, n_clas
     if all_pixel_conf is None:
         all_pixel_conf, all_gt_conf = pixel_conf, gt_conf
     else:
-        all_pixel_conf = torch.cat([pixel_conf, all_pixel_conf], 1)
-        all_gt_conf = torch.cat([gt_conf, all_gt_conf], 1)
+        all_pixel_conf = torch.cat([all_pixel_conf,pixel_conf], 1)
+        all_gt_conf = torch.cat([all_gt_conf,gt_conf], 1)
 
     return all_pixel_conf, all_gt_conf
 

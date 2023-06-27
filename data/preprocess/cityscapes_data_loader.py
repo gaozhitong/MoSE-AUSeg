@@ -120,10 +120,6 @@ def all_file_paths_bpred(dir, dir_bb, mode, label_transform = False, input_norma
         if mode == 'train' and city.stem in val_cities:
             continue
 
-
-        # i+=1
-        # if i >= 2:
-        #     break
         pictures = sorted(city.iterdir())
         for p in pictures:
 
@@ -275,67 +271,66 @@ def save_npy(data, vis_dir):
 
     return
 
-def vis(data, vis_dir):
-    stages = ['test', 'train', 'val']
-    for s in stages:
-        if not os.path.exists(os.path.join(vis_dir, s)):
-            os.makedirs(os.path.join(vis_dir, s))
-        # for t in types:
-
-        index = 0
-        vis_num = 20
-        L = vis_num
-        N = 5
-
-        while index+N < L:
-            image_list = np.array(data[s]['images'])[:vis_num]
-            label_list = np.array(data[s]['labels'])[:vis_num]
-            pred_list = np.array(data[s]['bbpreds'])[:vis_num]
-            prob_list = np.array(data[s]['probs'])[:vis_num]
-            # uid_list = np.array(data[s]['uids'])[:vis_num]
-            # index_sort = np.argsort(uid_list)
-            # uid_list = np.sort(uid_list)
-            # image_list = [image_list[i] for i in index_sort]
-            # label_list = [label_list[i] for i in index_sort]
-            i = 0
-            M = 2 + label_list[0].shape[0]
-
-            plt.figure(figsize = (M*3,N*3))
-            for image_id in range(index, index + N):
-                labels =label_list [image_id]
-                image = image_list[image_id]
-                pred = pred_list[image_id]
-                prob = prob_list[image_id]
-                i += 1
-                plt.subplot(N,M,i)
-                plt.imshow(image.transpose(1,2,0))
-                plt.axis('off')
-                i += 1
-                plt.subplot(N,M,i)
-                plt.imshow(pred)
-                plt.axis('off')
-
-
-                if len(labels.shape) == 2:
-                    labels = np.expand_dims(labels, 0)
-                for label_idx in range(labels.shape[0]):
-                    # import ipdb; ipdb.set_trace()
-                    label = labels[label_idx,:,:]
-                    i += 1
-                    plt.subplot(N,M,i)
-                    plt.imshow(label)
-                    plt.title(prob[label_idx])
-                    plt.axis('off')
-            plt.savefig(os.path.join(vis_dir, s, str(image_id) + '.png'))
-            index = image_id
-
-    return
+# def vis(data, vis_dir):
+#     stages = ['test', 'train', 'val']
+#     for s in stages:
+#         if not os.path.exists(os.path.join(vis_dir, s)):
+#             os.makedirs(os.path.join(vis_dir, s))
+#         # for t in types:
+#
+#         index = 0
+#         vis_num = 20
+#         L = vis_num
+#         N = 5
+#
+#         while index+N < L:
+#             image_list = np.array(data[s]['images'])[:vis_num]
+#             label_list = np.array(data[s]['labels'])[:vis_num]
+#             pred_list = np.array(data[s]['bbpreds'])[:vis_num]
+#             prob_list = np.array(data[s]['probs'])[:vis_num]
+#             # uid_list = np.array(data[s]['uids'])[:vis_num]
+#             # index_sort = np.argsort(uid_list)
+#             # uid_list = np.sort(uid_list)
+#             # image_list = [image_list[i] for i in index_sort]
+#             # label_list = [label_list[i] for i in index_sort]
+#             i = 0
+#             M = 2 + label_list[0].shape[0]
+#
+#             plt.figure(figsize = (M*3,N*3))
+#             for image_id in range(index, index + N):
+#                 labels =label_list [image_id]
+#                 image = image_list[image_id]
+#                 pred = pred_list[image_id]
+#                 prob = prob_list[image_id]
+#                 i += 1
+#                 plt.subplot(N,M,i)
+#                 plt.imshow(image.transpose(1,2,0))
+#                 plt.axis('off')
+#                 i += 1
+#                 plt.subplot(N,M,i)
+#                 plt.imshow(pred)
+#                 plt.axis('off')
+#
+#
+#                 if len(labels.shape) == 2:
+#                     labels = np.expand_dims(labels, 0)
+#                 for label_idx in range(labels.shape[0]):
+#                     # import ipdb; ipdb.set_trace()
+#                     label = labels[label_idx,:,:]
+#                     i += 1
+#                     plt.subplot(N,M,i)
+#                     plt.imshow(label)
+#                     plt.title(prob[label_idx])
+#                     plt.axis('off')
+#             plt.savefig(os.path.join(vis_dir, s, str(image_id) + '.png'))
+#             index = image_id
+#
+#     return
 
 if __name__ == '__main__':
     data_root = '../data/cityscapes/processed/quarter'
     bbpred_root = '../data/cityscapes/bb_preds'
     preproc_folder = '../data/preproc'
-    vis_dir = '../data/cityscape_vis/joint/'
     save_npy_dir =  '../data/cityscape_npy_5/'
 
     save_npy(load_and_maybe_process_data(data_root, preproc_folder, bbpred_root, True), save_npy_dir)

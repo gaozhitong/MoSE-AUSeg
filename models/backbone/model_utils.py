@@ -22,14 +22,15 @@ class Conv2D(nn.Module):
 
 class Conv2DSequence(nn.Module):
     """Block with 2D convolutions after each other with ReLU activation"""
-    def __init__(self, input_dim, output_dim, kernel=3, depth=2):
+    def __init__(self, input_dim, hidden_dim, output_dim, kernel=3, depth=2):
         super(Conv2DSequence, self).__init__()
         layers = []
+        layers.append(Conv2D(input_dim, hidden_dim, kernel_size=kernel, bias=True))
 
-        for i in range(depth-1):
-            layers.append(Conv2D(input_dim, input_dim, kernel_size=kernel, bias = False))
+        for i in range(depth-2):
+            layers.append(Conv2D(hidden_dim, hidden_dim, kernel_size=kernel, bias = True))
 
-        layers.append(Conv2D(input_dim, output_dim, kernel_size=kernel, bias = True))
+        layers.append(Conv2D(hidden_dim, output_dim, kernel_size=kernel, bias = True))
 
         self.convolution = nn.Sequential(*layers)
 

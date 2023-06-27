@@ -14,13 +14,12 @@ class Engine:
         self.logger = logger
         self.args = args
 
-        # Setup Model
-        self.net = torch.nn.DataParallel(self.exp_config.net).cuda()
+        self.net = self.exp_config.net
         size = get_model_size(self.net)
         self.logger.info("model size: {:.2f} / MB".format(size))
 
         # Setup Optimizer and Schedulers.
-        self.optimizer = torch.optim.Adam(self.net.module.parameters(), lr=exp_config.lr, weight_decay=1e-5)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=exp_config.lr, weight_decay=1e-5)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer, 'min', min_lr=exp_config.scheduler_options['min_lr'], verbose=True,
             patience=exp_config.scheduler_options['patience'],
@@ -28,13 +27,17 @@ class Engine:
 
         self.setup_param_schedulers(exp_config)
 
+        # Setup Model
+        self.net = torch.nn.DataParallel(self.net).cuda()
         self.load_model_optimizer_weight(exp_config, args)
+
+
 
         # Setup tensorboard
         if tensorboard:
             run_dir = os.path.join(exp_config.run_root, exp_config.log_dir_name, exp_config.experiment_name)
-            if os.path.exists(run_dir) and args.overwrite:
-                shutil.rmtree(run_dir,  ignore_errors=True)
+            # if os.path.exists(run_dir):
+            #     shutil.rmtree(run_dir,  ignore_errors=True)
             self.validation_writer = SummaryWriter(log_dir=run_dir)
 
 
@@ -141,13 +144,14 @@ class Engine:
                 masks_arrangement = masks_arrangement.cuda()
                 prob_gt = prob_gt.cuda()
                 metrics,prediction,prob = self.net.forward(patch_arrangement, masks_arrangement, prob_gt, val=True)
+
                 metrics_list.append([metric_.nanmean().item() for metric_ in metrics])  # get mean if parallel is used
                 all_pixel_conf, all_gt_conf = get_conf_map_accumulate(prediction, prob, masks_arrangement, prob_gt,
                                                                self.exp_config.n_classes, all_pixel_conf, all_gt_conf)
                 del patch_arrangement,masks_arrangement,prob_gt, metrics, prediction
-                torch.cuda.empty_cache()
+
             # calculate ECE
-            ece = calculate_ece(all_pixel_conf.transpose(0,1), all_gt_conf, n_bins=10, label_range = self.exp_config.eval_class_ids)
+            ece = calculate_ece(all_pixel_conf, all_gt_conf, n_bins=10, label_range = self.exp_config.eval_class_ids)
 
             mean_metrics = torch.tensor(metrics_list).nanmean(0)
             mean_metrics =  torch.cat([mean_metrics, torch.tensor(ece).unsqueeze(0)])
@@ -175,8 +179,6 @@ class Engine:
                 model_selection)
 
             self.net.load_state_dict(torch.load(model_path), strict=True)
-            self.optimizer.load_state_dict(torch.load(model_path.replace('.pth', '_optim.pth')))
-            self.logger.info('Loading model {}'.format(model_path))
 
         # Training with pretrained model
         elif hasattr(exp_config, 'pretrained_model_full_path') and exp_config.pretrained_model_full_path!= '':

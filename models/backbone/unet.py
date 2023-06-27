@@ -53,7 +53,7 @@ class UpConvBlock(nn.Module):
 
     def forward(self, x, bridge):
         if self.bilinear:
-            up = nn.functional.interpolate(x, mode='bilinear', scale_factor=2, align_corners=True)
+            up = nn.functional.interpolate(x, mode='bilinear', scale_factor=2, align_corners=False)
         else:
             up = self.upconv_layer(x)
 
@@ -73,8 +73,7 @@ class Unet(nn.Module):
     padidng: Boolean, if true we pad the images with 1 so that we keep the same dimensions
     """
 
-    def __init__(self, input_channels, num_classes, num_filters, apply_last_layer=True, padding=True,
-                 global_layer = 5):
+    def __init__(self, input_channels, num_classes, num_filters, apply_last_layer=True, padding=True):
         super(Unet, self).__init__()
         self.input_channels = input_channels
         self.num_classes = num_classes
@@ -83,7 +82,6 @@ class Unet(nn.Module):
         self.activation_maps = []
         self.apply_last_layer = apply_last_layer
         self.contracting_path = nn.ModuleList()
-        self.global_layer = global_layer
 
         for i in range(len(self.num_filters)):
             input = self.input_channels if i == 0 else output
@@ -100,15 +98,8 @@ class Unet(nn.Module):
         n = len(self.num_filters) - 2
         for i in range(n, -1, -1):
             input = output + self.num_filters[i]
-            if i == n:
-                output = self.num_filters[i]
-            else:
-                output = self.num_filters[i+1]
+            output = self.num_filters[i]
             self.upsampling_path.append(UpConvBlock(input, output, padding))
-
-        # if self.apply_last_layer:
-        self.last_layer = nn.Conv2d(output, self.num_filters[0], kernel_size=1)
-
 
     def forward(self, x):
         blocks = []
@@ -116,13 +107,10 @@ class Unet(nn.Module):
             x = down(x)
             if i != len(self.contracting_path)-1:
                 blocks.append(x)
-
+        bottle_neck  = x
         for i, up in enumerate(self.upsampling_path):
             x = up(x, blocks[-i-1])
 
-        x =  self.last_layer(x)
+        del blocks
 
-        # Extract the global feature embedding from the outputs of the encoder.
-        global_feature = blocks[self.global_layer].mean([-1,-2])
-
-        return global_feature, x
+        return bottle_neck, x

@@ -6,12 +6,12 @@ import torchvision.transforms as transforms
 from models.MoSE import MoSE
 import numpy as np
 
-experiment_name = 'MoSE_run'
+experiment_name = 'run'
 
 # Setup directories
 log_root = './log'
 run_root = './runs'
-log_dir_name = 'cityscape'
+log_dir_name = 'cityscapes'
 data_folder = '../data/cityscape_npy_5/'
 
 # Setup data
@@ -44,7 +44,6 @@ loss_fn = OT_loss( cost_fn='ce', beta = 1, gamma0=1/32, G0=1.0, num_chunks=16)
 net = MoSE(input_channels=input_channels,
                 num_classes=n_classes,
                 num_filters=[32, 64, 128, 192, 192, 192, 192],
-                gating_input_layer=4,
                 latent_dim = 5,
                 num_expert = 35,
                 sample_per_mode=1,
@@ -60,7 +59,7 @@ pretrained_model_full_path = ''
 
 train_batch_size = 12
 val_batch_size = 12
-test_batch_size = 4
+test_batch_size = 2
 epochs = 1000
 
 lr = 1e-3

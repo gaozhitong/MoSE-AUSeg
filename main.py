@@ -7,6 +7,7 @@ from importlib.machinery import SourceFileLoader
 
 if __name__ == '__main__':
     utils.random_init(0)
+
     # Config file
     config_file = args.EXP_PATH
     config_module = config_file.split('/')[-1].rstrip('.py')
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     # Prepare Data
     data = exp_config.data_loader(exp_config=exp_config)
 
-    # Start Training or Inference
+    # Start Inference or Training
     if args.demo != '':
         model = Engine(exp_config, logger=basic_logger, args=args, tensorboard=False)
         if args.demo == 'train':
@@ -44,7 +45,6 @@ if __name__ == '__main__':
         model.test(data_demo, save_path)
 
     else:
-        # Prepare Model
         model = Engine(exp_config, logger=basic_logger, args=args, tensorboard=True)
         shutil.copy(exp_config.__file__, log_dir)
         model.train(data)

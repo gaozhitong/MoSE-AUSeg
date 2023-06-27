@@ -82,9 +82,9 @@ def cal_metrics_batch(sample_arr, gt_arr, prob_sample = None, prob_gt = None, to
     B,N,C,H,W = sample_arr.shape
     B,M,C,H,W = gt_arr.shape
 
-    if ((sample_arr > 1)).any():
-        # Means samples are in logit level, do softmax
-        sample_arr = torch.nn.functional.softmax(sample_arr, dim=2)
+    # if ((sample_arr > 1)).any():
+    #     # Means samples are in logit level, do softmax
+    #     sample_arr = torch.nn.functional.softmax(sample_arr, dim=2)
 
     if prob_sample is None:
         prob_sample = get_uniform_prob(N, sample_arr.device).repeat(B,1)
@@ -174,12 +174,12 @@ def calculate_ece(softmaxes, labels, n_bins=10, label_range = None):
     bin_lowers = bin_boundaries[:-1]
     bin_uppers = bin_boundaries[1:]
 
-    confidences, predictions = torch.max(softmaxes, 1)
+    confidences, predictions = torch.max(softmaxes, 0)
 
     if label_range is not None:
         # For the binary case in the LIDC dataset, we measure how the foreground class is calibrated.
         if len(label_range) == 1:
-            confidences_masked = softmaxes[:,1]
+            confidences_masked = softmaxes[1]
             accuracies = labels[1]
 
         # For the multi-class case in the Cityscapes dataset, we measure how the most-likely class
@@ -188,10 +188,10 @@ def calculate_ece(softmaxes, labels, n_bins=10, label_range = None):
             confidences_masked = confidences * 0 - 1
             for i in label_range:
                 confidences_masked[predictions == i] = confidences[predictions == i]
-            accuracies = (labels * F.one_hot(predictions, softmaxes.shape[1]).transpose(0, 1)).sum(0)
+            accuracies = (labels * F.one_hot(predictions, softmaxes.shape[0]).transpose(0, 1)).sum(0)
     else:
         confidences_masked = confidences
-        accuracies = (labels * F.one_hot(predictions, softmaxes.shape[1]).transpose(0, 1)).sum(0)
+        accuracies = (labels * F.one_hot(predictions, softmaxes.shape[0]).transpose(0, 1)).sum(0)
 
     ece = torch.zeros(1, device=softmaxes.device)
     for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):

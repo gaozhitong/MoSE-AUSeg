@@ -11,8 +11,6 @@ from sklearn.model_selection import train_test_split
 from utils import utils
 
 
-#logging.basicConfig(level=logging.info, format='%(asctime)s %(message)s')
-
 def crop_or_pad_slice_to_size(slice, nx, ny):
     x, y = slice.shape
 
@@ -128,11 +126,8 @@ def load_and_maybe_process_data(input_file,
 
 
     if not os.path.exists(data_file_path) or force_overwrite:
-        #basic_logger.info('This configuration of mode, size and target resolution has not yet been preprocessed')
-        #basic_logger.info('Preprocessing now!')
         prepare_data(input_file, data_file_path)
     else:
-        #basic_logger.info('Already preprocessed this configuration. Loading now!')
         pass
 
     return h5py.File(data_file_path, 'r')
@@ -146,44 +141,43 @@ def save_npy(data, vis_dir):
                 os.makedirs(os.path.join(vis_dir, s, t))
             for index, image in enumerate(data[s][t]):
                 np.save(os.path.join(vis_dir, s, t, str(index) + '.npy'), image)
-
     return
 
-def vis(data, vis_dir):
-    import matplotlib.pyplot as plt
-    stages = [  'test']
-    types = ['images', 'labels']
-    for s in stages:
-        if not os.path.exists(os.path.join(vis_dir, s)):
-            os.makedirs(os.path.join(vis_dir, s))
-        # for t in types:
-        L = len(data[s]['images'])
-        index = 0
-        while index < L:
-            image_list = data[s]['images']
-            label_list = data[s]['labels']
-            i = 0
-            N = 5
-            plt.figure(figsize = (5*3,N*3))
-            for image_id in range(index, index + N):
-                image = image_list[image_id]
-                labels = label_list[image_id]
-                i += 1
-                plt.subplot(N,5,i)
-                plt.imshow(image)
-                plt.axis('off')
-                for label_idx in range(labels.shape[-1]):
-                    # import ipdb; ipdb.set_trace()
-                    label = labels[:,:,label_idx]
-                    i += 1
-                    plt.subplot(N,5,i)
-                    plt.imshow(label)
-                    plt.axis('off')
-            plt.savefig(os.path.join(vis_dir, s, str(image_id) + '.png'))
-            index = image_id
-
-
-    return
+# def vis(data, vis_dir):
+#     import matplotlib.pyplot as plt
+#     stages = [  'test']
+#     types = ['images', 'labels']
+#     for s in stages:
+#         if not os.path.exists(os.path.join(vis_dir, s)):
+#             os.makedirs(os.path.join(vis_dir, s))
+#         # for t in types:
+#         L = len(data[s]['images'])
+#         index = 0
+#         while index < L:
+#             image_list = data[s]['images']
+#             label_list = data[s]['labels']
+#             i = 0
+#             N = 5
+#             plt.figure(figsize = (5*3,N*3))
+#             for image_id in range(index, index + N):
+#                 image = image_list[image_id]
+#                 labels = label_list[image_id]
+#                 i += 1
+#                 plt.subplot(N,5,i)
+#                 plt.imshow(image)
+#                 plt.axis('off')
+#                 for label_idx in range(labels.shape[-1]):
+#                     # import ipdb; ipdb.set_trace()
+#                     label = labels[:,:,label_idx]
+#                     i += 1
+#                     plt.subplot(N,5,i)
+#                     plt.imshow(label)
+#                     plt.axis('off')
+#             plt.savefig(os.path.join(vis_dir, s, str(image_id) + '.png'))
+#             index = image_id
+#
+#
+#     return
 
 if __name__ == '__main__':
     data_root = '../data/data_lidc.pickle'
