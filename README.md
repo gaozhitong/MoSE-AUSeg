@@ -52,7 +52,7 @@ Additionally, you can set the use_bbpred option to False in cityscapes_proposed.
 
 Feel free to experiment with different configurations and options to achieve the desired results.
 
-## 3. Testing the Model
+# 3. Testing the Model
 After completing the training, you can assess the model's performance by executing the following command.
 ```python
 python main.py experiments/lidc_proposed.py --demo test
